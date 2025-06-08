@@ -28,9 +28,11 @@ logging:
     name: src/main/resources/script/stage_log.log
     clean-history-on-start: true
   level:
+    root: INFO 
     org:
+      flywaydb: DEBUG
       hibernate:
-        SQL: DEBUG
+        SQL: DEBUG 
       springframework:
         web: DEBUG
         data: DEBUG
@@ -40,4 +42,3 @@ logging:
             rest: DEBUG
             jpa: DEBUG
             orm: DEBUG
-
