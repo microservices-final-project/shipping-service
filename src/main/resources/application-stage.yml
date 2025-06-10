@@ -9,6 +9,8 @@ management:
         include: "*"
 
 spring:
+  flyway:
+    table: flyway_shipping_history
   datasource:
     url: jdbc:mysql://localhost:3306/ecommerce_stage_db
     username: root
