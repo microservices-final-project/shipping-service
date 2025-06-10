@@ -10,6 +10,7 @@ management:
 
 spring:
   flyway:
+    baseline-on-migrate: true
     enabled: true
     locations: classpath:db/migration
     table: flyway_shipping_history
