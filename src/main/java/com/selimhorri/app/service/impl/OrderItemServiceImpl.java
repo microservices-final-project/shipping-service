@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -71,6 +70,14 @@ public class OrderItemServiceImpl implements OrderItemService {
 								log.warn("Order {} not found", o.getOrderDto().getOrderId());
 								return false;
 							}
+							System.out.println("====================");
+							System.out.println(OrderStatus.ORDERED.name());
+							System.out.println(order.getOrderStatus());
+							System.out.println("====================");
+
+							if (!OrderStatus.ORDERED.name().equals(order.getOrderStatus())) {
+								return false;
+							}
 							o.setOrderDto(order);
 						} catch (RestClientException e) {
 							log.warn("Failed to fetch order with id: {}", o.getOrderDto().getOrderId(), e);
@@ -91,12 +98,13 @@ public class OrderItemServiceImpl implements OrderItemService {
 		log.info("*** OrderItemDto, service; fetch orderItem by id *");
 
 		OrderItem orderItem = this.orderItemRepository.findById(orderItemId)
-				.filter(OrderItem::isActive) // Asumiendo que tienes este método/getter
+				.filter(OrderItem::isActive)
 				.orElseThrow(() -> new OrderItemNotFoundException(
 						String.format("Active OrderItem with id: %s not found", orderItemId)));
 
 		OrderItemDto dto = OrderItemMappingHelper.map(orderItem);
 
+		// Verificar y cargar producto
 		if (dto.getProductDto() != null && dto.getProductDto().getProductId() != null) {
 			try {
 				ProductDto product = this.restTemplate.getForObject(
@@ -110,18 +118,30 @@ public class OrderItemServiceImpl implements OrderItemService {
 			}
 		}
 
-		// Consultar orden solo si está activa
+		// Verificar y cargar orden, y comprobar su estado
 		if (dto.getOrderDto() != null && dto.getOrderDto().getOrderId() != null) {
 			try {
 				OrderDto order = this.restTemplate.getForObject(
 						AppConstant.DiscoveredDomainsApi.ORDER_SERVICE_API_URL + "/" +
 								dto.getOrderDto().getOrderId(),
 						OrderDto.class);
+
+				if (order == null) {
+					throw new OrderItemNotFoundException("Associated order not found");
+				}
+
+				// Verificar que el estado sea ORDERED
+				if (!OrderStatus.ORDERED.name().equals(order.getOrderStatus())) {
+					throw new OrderItemNotFoundException("Shipping not found");
+				}
+
 				dto.setOrderDto(order);
 			} catch (RestClientException e) {
 				log.error("Failed to fetch order details for order item: {}", orderItemId, e);
 				throw new OrderItemNotFoundException("Order information not available for this order item");
 			}
+		} else {
+			throw new OrderItemNotFoundException("No associated order found for this order item");
 		}
 
 		return dto;
@@ -180,7 +200,7 @@ public class OrderItemServiceImpl implements OrderItemService {
 
 		// Save the order item
 		OrderItemDto savedItem = OrderItemMappingHelper.map(
-				this.orderItemRepository.save(OrderItemMappingHelper.map(orderItemDto)));
+				this.orderItemRepository.save(OrderItemMappingHelper.mapForCreation(orderItemDto)));
 
 		// Update order status after successful save
 		try {
@@ -202,14 +222,39 @@ public class OrderItemServiceImpl implements OrderItemService {
 
 	@Override
 	@Transactional
-	public void deleteById(final int shippingId) {
+	public void deleteById(final int orderItemId) {
 		log.info("*** Void, service; soft delete orderItem by id *");
-		this.orderItemRepository.findById(shippingId)
-				.ifPresent(orderItem -> {
-					orderItem.setActive(false);
-					this.orderItemRepository.save(orderItem);
-					log.info("OrderItem with id {} has been deactivated", shippingId);
+
+		this.orderItemRepository.findByOrderIdAndIsActiveTrue(orderItemId)
+				.ifPresentOrElse(orderItem -> {
+					// Verificar si la orden asociada tiene estado ORDERED
+					try {
+						OrderDto order = this.restTemplate.getForObject(
+								AppConstant.DiscoveredDomainsApi.ORDER_SERVICE_API_URL + "/" +
+										orderItem.getOrderId(),
+								OrderDto.class);
+
+						if (order == null) {
+							throw new OrderItemNotFoundException("Associated order not found");
+						}
+
+						if (!OrderStatus.ORDERED.name().equals(order.getOrderStatus())) {
+							throw new IllegalStateException(
+									"Cannot delete order item - associated order is not in ORDERED status");
+						}
+
+						orderItem.setActive(false);
+						this.orderItemRepository.save(orderItem);
+						log.info("OrderItem with id {} has been deactivated", orderItemId);
+
+					} catch (RestClientException e) {
+						log.error("Failed to fetch order details for order item: {}", orderItemId, e);
+						throw new OrderItemNotFoundException("Order information not available for this order item");
+					}
+
+				}, () -> {
+					throw new OrderItemNotFoundException(
+							String.format("OrderItem with id: %s not found", orderItemId));
 				});
 	}
-
 }
