@@ -1,4 +1,4 @@
-package com.selimhorri.app.service;
+package com.selimhorri.app.unit.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -16,14 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.selimhorri.app.constant.AppConstant;
 import com.selimhorri.app.domain.OrderItem;
 import com.selimhorri.app.dto.OrderDto;
 import com.selimhorri.app.dto.OrderItemDto;
 import com.selimhorri.app.dto.OrderStatus;
 import com.selimhorri.app.dto.ProductDto;
 import com.selimhorri.app.exception.wrapper.OrderItemNotFoundException;
-import com.selimhorri.app.helper.OrderItemMappingHelper;
 import com.selimhorri.app.repository.OrderItemRepository;
 import com.selimhorri.app.service.impl.OrderItemServiceImpl;
 

@@ -1,12 +1,10 @@
-package com.selimhorri.app.resource;
+package com.selimhorri.app.unit.resource;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.selimhorri.app.dto.OrderItemDto;
 import com.selimhorri.app.exception.ApiExceptionHandler;
+import com.selimhorri.app.resource.OrderItemResource;
 import com.selimhorri.app.service.OrderItemService;
 
 @ExtendWith(MockitoExtension.class)
