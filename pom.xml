@@ -167,6 +167,35 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.7</version> <!-- o la más reciente -->
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/config/**</exclude>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/*Application*</exclude>
+								<exclude>**/model/**</exclude>
+								<exclude>**/exception/**</exclude>
+								<exclude>**/domain/**</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+				</executions>
+        	</plugin>
 		</plugins>
 		<finalName>${project.artifactId}-v${project.version}</finalName>
 	</build>
