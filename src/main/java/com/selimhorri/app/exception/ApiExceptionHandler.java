@@ -3,6 +3,7 @@ package com.selimhorri.app.exception;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.selimhorri.app.exception.payload.ExceptionMsg;
+import com.selimhorri.app.exception.wrapper.OrderItemNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,52 +22,62 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ApiExceptionHandler {
-	
+
 	@ExceptionHandler(value = {
-		MethodArgumentNotValidException.class,
-		HttpMessageNotReadableException.class,
+			MethodArgumentNotValidException.class,
+			HttpMessageNotReadableException.class,
 	})
 	public <T extends BindException> ResponseEntity<ExceptionMsg> handleValidationException(final T e) {
-		
+
 		log.info("**ApiExceptionHandler controller, handle validation exception*\n");
 		final var badRequest = HttpStatus.BAD_REQUEST;
-		
+
 		return new ResponseEntity<>(
 				ExceptionMsg.builder()
-					.msg("*" + e.getBindingResult().getFieldError().getDefaultMessage() + "!**")
-					.httpStatus(badRequest)
-					.timestamp(ZonedDateTime
-							.now(ZoneId.systemDefault()))
-					.build(), badRequest);
+						.msg("*" + e.getBindingResult().getFieldError().getDefaultMessage() + "!**")
+						.httpStatus(badRequest)
+						.timestamp(ZonedDateTime
+								.now(ZoneId.systemDefault()))
+						.build(),
+				badRequest);
 	}
-	
+
 	@ExceptionHandler(value = {
-		IllegalStateException.class,
+			OrderItemNotFoundException.class,
+			EmptyResultDataAccessException.class
+	})
+	public <T extends RuntimeException> ResponseEntity<ExceptionMsg> handleApiNotFoundException(final T e) {
+
+		log.info("**ApiExceptionHandler controller, handle API request*\n");
+		final var notfound= HttpStatus.NOT_FOUND;
+
+		return new ResponseEntity<>(
+				ExceptionMsg.builder()
+						.msg("#### " + e.getMessage() + "! ####")
+						.httpStatus(notfound)
+						.timestamp(ZonedDateTime
+								.now(ZoneId.systemDefault()))
+						.build(),
+				notfound);
+	}
+
+	@ExceptionHandler(value = {
+			IllegalStateException.class,
+			IllegalArgumentException.class
 	})
 	public <T extends RuntimeException> ResponseEntity<ExceptionMsg> handleApiRequestException(final T e) {
-		
+
 		log.info("**ApiExceptionHandler controller, handle API request*\n");
 		final var badRequest = HttpStatus.BAD_REQUEST;
-		
+
 		return new ResponseEntity<>(
 				ExceptionMsg.builder()
-					.msg("#### " + e.getMessage() + "! ####")
-					.httpStatus(badRequest)
-					.timestamp(ZonedDateTime
-							.now(ZoneId.systemDefault()))
-					.build(), badRequest);
+						.msg("#### " + e.getMessage() + "! ####")
+						.httpStatus(badRequest)
+						.timestamp(ZonedDateTime
+								.now(ZoneId.systemDefault()))
+						.build(),
+				badRequest);
 	}
-	
-	
-	
+
 }
-
-
-
-
-
-
-
-
-
-
