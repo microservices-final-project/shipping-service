@@ -31,11 +31,15 @@ resilience4j:
 management:
   health:
     circuitbreakers:
-      enabled: true
-  endpoint:
-    health:
-      show-details: always
-
+      enabled: true  
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 
 
